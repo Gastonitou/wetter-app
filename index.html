@@ -233,10 +233,9 @@ async function showWeather(lat, lon, cityName, countryName, wcode){
     var hh='';
     var now=new Date();
     var currentHour=now.getHours();
-    for(var i=0;i<h.time.length;i++){
+    for(var i=0;i<Math.min(h.time.length,24);i++){
       var t=h.time[i];
       var hour=parseInt(t.substring(11,13));
-      // Show every 1 hour or every 3 hours if >12 items  
       var isNow=(Math.abs(hour-currentHour)<=1);
       hh+='<div class="h-item'+(isNow?' h-now':'')+'">'+
         '<div class="h-time">'+(isNow?'Jetzt':formatTime(t))+'</div>'+
