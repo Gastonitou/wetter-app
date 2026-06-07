@@ -201,15 +201,17 @@ function getLocation(){
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('result').classList.add('hidden');
     try{
-      // Reverse geocode
-      var g=await fetch('https://geocoding-api.open-meteo.com/v1/reverse?latitude='+lat+'&longitude='+lon+'&count=1&language=de&format=json');
-      var gd=await g.json();
-      var city='Unbekannter Ort';
+      // Reverse geocode via BigDataCloud (CORS-konform)
+      var city='Dein Standort';
       var country='';
-      if(gd.results&&gd.results.length){
-        city=gd.results[0].name;
-        country=gd.results[0].country||'';
-      }
+      try{
+        var g=await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+'&longitude='+lon+'&localityLanguage=de');
+        if(g.ok){
+          var gd=await g.json();
+          city=gd.city||gd.locality||gd.principalSubdivision||'Dein Standort';
+          country=gd.countryName||'';
+        }
+      }catch(e){}
       await showWeather(lat, lon, city, country);
       document.getElementById('cityInput').value=city;
       status.style.display='none';
