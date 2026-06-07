@@ -64,24 +64,18 @@ body.w-fog { background: linear-gradient(180deg, #7a8a96 0%, #a0b0bd 50%, #c0cdd
 .now .det .lbl { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
 .now .det .val { font-size: 14px; font-weight: 500; margin-top: 1px; }
 
-/* Hourly */
-.hourly-wrap { margin-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; padding: 4px 0; }
-.hourly-wrap::-webkit-scrollbar { height: 3px; }
-.hourly-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-.hourly {
-  display: inline-flex; gap: 4px;
+/* Hourly rows */
+.h-row {
+  display: flex; align-items: center; padding: 6px 10px;
+  background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 2px;
+  backdrop-filter: blur(4px);
 }
-.hourly .h-item {
-  display: inline-flex; flex-direction: column; align-items: center;
-  background: rgba(255,255,255,0.08); backdrop-filter: blur(5px);
-  border-radius: 10px; padding: 8px 10px; min-width: 56px;
-  border: 1px solid rgba(255,255,255,0.05);
-}
-.hourly .h-item .h-time { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; }
-.hourly .h-item .h-icon { font-size: 18px; margin: 2px 0; }
-.hourly .h-item .h-temp { font-size: 14px; font-weight: 500; }
-.hourly .h-item .h-wind { font-size: 9px; color: rgba(255,255,255,0.4); }
-.hourly .h-item.h-now { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.15); }
+.h-row .htime { width:44px; font-size:11px; font-weight:600; }
+.h-row .hicon { width:28px; text-align:center; font-size:15px; }
+.h-row .hdesc { flex:1; font-size:9px; color:rgba(255,255,255,0.4); margin:0 6px; }
+.h-row .hwnd { font-size:10px; color:rgba(255,255,255,0.3); text-align:right; margin-right:4px; min-width:42px; }
+.h-row .htemp { text-align:right; font-size:12px; font-weight:500; min-width:28px; }
+.h-row.h-now { background:rgba(255,255,255,0.14); }
 
 /* Daily */
 .forecasts { margin-top: 4px; }
@@ -160,8 +154,10 @@ hint{font-size:10px;color:rgba(255,255,255,0.4);padding:4px 8px;margin-bottom:6p
       <div class="cond" id="ct">-</div>
       <div class="det" id="det1"></div>
     </div>
-    <hint style="font-size:10px;color:rgba(255,255,255,0.4);padding:4px 8px;margin-bottom:6px;">⏰ Stündlich — wische ➡️</hint>
-    <div class="hourly-wrap"><div class="hourly" id="hl"></div></div>
+    <div id="hsection" style="margin-bottom:8px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);padding:4px 8px;margin-bottom:4px;font-weight:600;">⏰ Stündlich</div>
+      <div id="hl"></div>
+    </div>
     <div class="forecasts" id="fl"></div>
   </div>
   <div class="footer">⚡ Open-Meteo • Live-Daten • GPS</div>
@@ -228,7 +224,7 @@ async function showWeather(lat, lon, cityName, countryName, wcode){
       '<div><div class="lbl">Luft</div><div class="val">'+cur.relative_humidity_2m+'%</div></div>'+
       '<div><div class="lbl">Regen</div><div class="val">'+Math.round(wd.daily.precipitation_sum?wd.daily.precipitation_sum[0]||0:0)+' mm</div></div>';
     
-    // Hourly (24h)
+    // Hourly (24h) - vertical rows
     var h=wd.hourly;
     var hh='';
     var now=new Date();
@@ -237,11 +233,13 @@ async function showWeather(lat, lon, cityName, countryName, wcode){
       var t=h.time[i];
       var hour=parseInt(t.substring(11,13));
       var isNow=(Math.abs(hour-currentHour)<=1);
-      hh+='<div class="h-item'+(isNow?' h-now':'')+'">'+
-        '<div class="h-time">'+(isNow?'Jetzt':formatTime(t))+'</div>'+
-        '<div class="h-icon">'+em(h.weathercode[i])+'</div>'+
-        '<div class="h-temp">'+Math.round(h.temperature_2m[i])+'°</div>'+
-        '<div class="h-wind">'+(h.wind_speed_10m[i]?Math.round(h.wind_speed_10m[i])+'km/h':'')+'</div></div>';
+      var prec=h.precipitation_probability?h.precipitation_probability[i]:0;
+      hh+='<div class="h-row'+(isNow?' h-now':'')+'">'+
+        '<div class="htime">'+(isNow?'Jetzt':t.substring(11,16))+'</div>'+
+        '<div class="hicon">'+em(h.weathercode[i])+'</div>'+
+        '<div class="hdesc">'+ds(h.weathercode[i])+'</div>'+
+        '<div class="hwnd">'+(h.wind_speed_10m[i]?Math.round(h.wind_speed_10m[i])+'km/h':'')+'</div>'+
+        '<div class="htemp">'+Math.round(h.temperature_2m[i])+'°</div></div>';
     }
     document.getElementById('hl').innerHTML=hh;
     
